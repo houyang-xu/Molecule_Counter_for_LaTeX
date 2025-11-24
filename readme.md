@@ -1,4 +1,4 @@
-# Molecule Counter
+# Molecule Counter for LaTeX
 
 A LaTeX package for automatically numbering molecules in chemistry documents.
 
@@ -31,7 +31,7 @@ Copy `moleculecounter.sty` or `moleculecounterbych.sty` to your project director
 **`\newmol{label}`** - Define and display a new molecule
 ```latex
 The synthesis of paclitaxel (\newmol{taxol}) was performed...
-% Output: "The synthesis of paclitaxel (**1**) was performed..."
+% Output: "The synthesis of paclitaxel (\textbf{1}) was performed..."
 ```
 
 **`\invmol{label}`** - Register a molecule invisibly (nothing printed. I prefer this one as it'd good for managing all molecules of the same section. Also if you have molecule names in floats e.g. tables or figures and sometimes you have *\newmol* before *\usemol*, which causes issues. *Update*: with the new forward-referencing function in v1.1 it doesn't seem to be an issue anymore!
@@ -44,7 +44,7 @@ The synthesis of paclitaxel (\newmol{taxol}) was performed...
 **`\usemol{label}`** - Reference a molecule
 ```latex
 Compound \usemol{taxol} was treated with...
-% Output: "Compound **1** was treated with..."
+% Output: "Compound \textbf{1} was treated with..."
 ```
 
 ### Example
