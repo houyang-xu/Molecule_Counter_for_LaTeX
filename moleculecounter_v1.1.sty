@@ -1,0 +1,83 @@
+% moleculecounter.sty
+% A project to count molecules in LaTeX documents.
+\ProvidesPackage{moleculecounter}[2025/07/31 v1.1 Molecule counter]
+
+% This creates a LaTeX counter for molecules (no chapter reset)
+\newcounter{mol}
+\renewcommand{\themol}{\arabic{mol}}
+
+% Define a new (visible) molecule with a label. This will be visualised when compiling with a bold number.
+% E.g. \newmol{label}. label is however you call your molecule.
+\newcommand{\newmol}[1]{%
+	\refstepcounter{mol}% increments 'mol' and sets up reference
+	\label{#1}% label so we can do \ref{#1} later
+	\textbf{\ref{#1}}%
+}
+
+% Define a new molecule INVISIBLY. This is NOT going to show anything. Can do it in preamble such that you can get a molecule list for yourself to see.
+% As author I prefer using this command, as I can place a list of molecules at the start of say a section, this is very useful when managing huge documents and many molecules :)
+% Usage: \invmol{label}
+\newcommand{\invmol}[1]{%
+	\refstepcounter{mol}% increments 'mol'
+	\label{#1}% no printed output, just sets the reference label.
+}
+
+% Use the molecule after the invisible definition as the apparent first introduction.
+% Usage: \usemol{label}
+\newcommand{\usemol}[1]{%
+	\textbf{\ref{#1}}%
+}
+
+% ----------------------- Jul 2025 UPDATE FORWARD REFERENCE --------------
+
+% If doesnt work, remove all aux etc files and compile again.
+
+% Forward reference system
+\AtBeginDocument{%
+	% Read stored molecule data if it exists
+	\InputIfFileExists{\jobname.moldata}{}{}%
+}
+
+% New command to register future molecules
+% Usage: \futureregister{label}{number}
+\newcommand{\futureregister}[2]{%
+	\expandafter\gdef\csname futmol@#1\endcsname{#2}%
+}
+
+% Override \usemol to check future registry first
+\let\oldusemol\usemol
+\renewcommand{\usemol}[1]{%
+	\@ifundefined{futmol@#1}{%
+		\oldusemol{#1}% Use original command if not in future registry
+	}{%
+		\textbf{\csname futmol@#1\endcsname}% Use future registry value
+	}%
+}
+
+% Hook into existing commands to record actual numbers
+\let\oldnewmol\newmol
+\renewcommand{\newmol}[1]{%
+	\oldnewmol{#1}%
+	% Write actual number to data file
+	\immediate\write\@auxout{%
+		\string\futureregister{#1}{\themol}%
+	}%
+}
+
+\let\oldinvmol\invmol
+\renewcommand{\invmol}[1]{%
+	\oldinvmol{#1}%
+	% Write actual number to data file
+	\immediate\write\@auxout{%
+		\string\futureregister{#1}{\themol}%
+	}%
+}
+
+% At end of document, copy aux entries to persistent file
+\AtEndDocument{%
+	\immediate\write\@auxout{%
+		\string\AtEndDocument{%
+			\string\immediate\string\write18{cp \jobname.aux \jobname.moldata}%
+		}%
+	}%
+}
